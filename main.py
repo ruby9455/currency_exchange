@@ -21,6 +21,8 @@ r.write(f"獲得利息2: {interest2}")
 l.write(f"總數1: {round(aud1+interest1, 4)}")
 r.write(f"總數2: {round(aud2+interest2, 4)}")
 
+st.divider()
+
 st.title("澳元兌換港幣")
 st.number_input("澳幣", value=1000, step=1, key="aud")
 l, r = st.columns(2)
