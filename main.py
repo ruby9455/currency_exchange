@@ -21,11 +21,11 @@ r.write(f"獲得利息2: {interest2}")
 total1 = round(aud1 + interest1, 4)
 total2 = round(aud2 + interest2, 4)
 if total1 > total2:
-    l.markdown(f"總數1: <span style='color: red;'>{total1}</span>", unsafe_allow_html=True)
+    l.markdown(f"總數1: <span style='color: red; font-size: 20px;'>{total1}</span>", unsafe_allow_html=True)
     r.markdown(f"總數2: {total2}")
 else:
     l.markdown(f"總數1: {total1}")
-    r.markdown(f"總數2: <span style='color: red;'>{total2}</span>", unsafe_allow_html=True)
+    r.markdown(f"總數2: <span style='color: red; font-size: 20px;'>{total2}</span>", unsafe_allow_html=True)
 
 st.divider()
 
@@ -50,8 +50,8 @@ r.write(f"獲得利息2: {interest2}")
 total1 = round(hkd1 + interest1, 4)
 total2 = round(hkd2 + interest2, 4)
 if total1 > total2:
-    l.markdown(f"總數1: <span style='color: red;'>{total1}</span>", unsafe_allow_html=True)
+    l.markdown(f"總數1: <span style='color: red; font-size: 20px;'>{total1}</span>", unsafe_allow_html=True)
     r.markdown(f"總數2: {total2}")
 else:
     l.markdown(f"總數1: {total1}")
-    r.markdown(f"總數2: <span style='color: red;'>{total2}</span>", unsafe_allow_html=True)
+    r.markdown(f"總數2: <span style='color: red; font-size: 20px;'>{total2}</span>", unsafe_allow_html=True)
