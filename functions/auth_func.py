@@ -129,6 +129,12 @@ if __name__ == "__main__":
             sys.exit(1)
         password = sys.argv[2]
         store_password(password)
+    elif command == "store_secondary_password":
+        if len(sys.argv) < 3:
+            print("Usage: python shared_func.py store_secondary_password <password>")
+            sys.exit(1)
+        password = sys.argv[2]
+        store_secondary_password(password)
     elif command == "list_functions":
         # Get all functions from locals() that don't start with underscore (non-private)
         functions = [name for name, obj in locals().items() 
