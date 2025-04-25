@@ -62,7 +62,7 @@ def main():
     init_page()
     header = st.columns([1, 5, 1])
     
-    header[1].title("Database Management")
+    header[1].title("Database Operations")
     content = st.container()
     if not st.session_state.logged_in:
         with content:
@@ -80,7 +80,7 @@ def main():
 
 if __name__ == "__main__":
     st.set_page_config(
-        page_title="Database Management",
+        page_title="Database Operations",
         page_icon=":guardsman:",
         layout="wide",
         initial_sidebar_state="collapsed",
