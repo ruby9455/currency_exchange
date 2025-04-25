@@ -367,3 +367,38 @@ def handle_data_type(data):
             data[key] = float(value)
     
     return data
+
+@st.dialog("Confirmation Dialog")
+def confirmation_dialog(message: str, on_confirm: 'Callable', on_cancel: 'Callable', args=None, kwargs=None):
+    """
+    Show a confirmation dialog with the specified message.
+    
+    Args:
+        message: The message to display in the dialog
+        on_confirm: Function to call when the user confirms
+        on_cancel: Function to call when the user cancels
+        args: Tuple of positional arguments to pass to on_confirm
+        kwargs: Dictionary of keyword arguments to pass to on_confirm
+    """
+    from functions.auth_func import authenticate_with_secondary
+    st.write(message)
+    secondary_pw = st.text_input("Enter secondary password", type="password", key="secondary_password")
+    if st.button("Confirm"):
+        logged_in_user = st.session_state.get("logged_in_user", "")
+        if not logged_in_user:
+            st.warning("Login ID is not set.")
+            return
+        if authenticate_with_secondary(username=logged_in_user, password=secondary_pw):
+            # Call on_confirm with args and kwargs if provided
+            if args is not None and kwargs is not None:
+                on_confirm(*args, **kwargs)
+            elif args is not None:
+                on_confirm(*args)
+            elif kwargs is not None:
+                on_confirm(**kwargs)
+            else:
+                on_confirm()
+        else:
+            st.warning("Invalid secondary password.")
+    if st.button("Cancel"):
+        on_cancel()

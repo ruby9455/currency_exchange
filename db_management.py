@@ -10,12 +10,13 @@ def init_page():
 
 def login_page():
     st.title("Login Page")
-    st.text_input("Enter Login ID", key="login_id", value="rubychan")
+    st.text_input("Enter Login ID", key="login_id")
     st.text_input("Enter Password", type="password", key="password", value="V5i9akab.")
     
     if st.button("Login"):
         if authenticate_user(st.session_state.login_id, st.session_state.password):
             st.session_state.logged_in = True
+            st.session_state.logged_in_user = st.session_state.login_id
             del st.session_state.password
             st.success("Login successful!")
             st.rerun()
@@ -24,14 +25,11 @@ def login_page():
 
 def logout_page():
     st.session_state.logged_in = False
-    if "login_id" in st.session_state: 
-        del st.session_state.login_id
+    if "logged_in_user" in st.session_state:
+        del st.session_state.logged_in_user
     if "password" in st.session_state: 
         del st.session_state.password
     st.success("Logged out successfully.")
-
-def refresh_page():
-    st.rerun()
 
 def db_actions():
     left_col, right_col = st.columns([2, 8])
@@ -70,7 +68,7 @@ def main():
         with content:
             login_page()
     else:
-        header[0].write(f"Welcome {st.session_state.login_id}!")
+        header[0].write(f"Welcome {st.session_state.logged_in_user}!")
         header[2].button("Logout", key="logout", on_click=logout_page)
         content.empty()
         with content:

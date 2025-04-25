@@ -243,6 +243,7 @@ def get_update_data_page():
                             st.warning("Please enter both database and collection names.")
                     
 def get_delete_data_page():
+    from functions.ui.db_func_ui import confirmation_dialog
     db_name, collection_name = create_db_and_collection_input()
     st.divider()
     
@@ -276,6 +277,12 @@ def get_delete_data_page():
                 if st.button("Delete Data"):
                     if db_name and collection_name:
                         ids_to_delete = selected_row_data["_id"].values.tolist()
-                        execute_batch_operations("delete", operations_data=ids_to_delete)
+                        confirmation_dialog(
+                            message=f"Are you sure you want to delete {len(selected_rows)} document(s)?",
+                            on_confirm=execute_batch_operations,
+                            on_cancel=st.rerun,
+                            args=("delete", ids_to_delete),
+                        )
+                        st.rerun()
                     else:
                         st.warning("Please enter both database and collection names.")
