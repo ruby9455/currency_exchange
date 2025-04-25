@@ -54,6 +54,34 @@ def store_password(password: str) -> None:
         toml.dump(config, file)
         
     print("Password stored successfully.")
+
+def store_secondary_password(password: str) -> None:
+    """
+    Store a secondary hashed password in a TOML file.
+    """
+    import toml
+    hashed_password = _get_hashed_password(password)
+    config = _read_toml(".streamlit/secrets.toml")
+    
+    if "app" not in config:
+        config["app"] = {}
+    if "secondary_password" not in config["app"]:
+        config["app"]["secondary_password"] = ""
+    
+    # if the password is already stored, ask for confirmation to overwrite
+    if config["app"]["secondary_password"] != "":
+        confirm = input("Secondary password already exists. Do you want to overwrite it? (y/n): ")
+        if confirm.lower() != 'y':
+            print("Secondary password not changed.")
+            return
+        
+    config["app"]["secondary_password"] = hashed_password
+    
+    # Write the updated config back to the TOML file
+    with open(".streamlit/secrets.toml", 'w') as file:
+        toml.dump(config, file)
+        
+    print("Secondary password stored successfully.")
     
 def authenticate_user(username: str, password: str) -> bool:
     """
@@ -69,6 +97,22 @@ def authenticate_user(username: str, password: str) -> bool:
     if username == correct_username and _verify_password(correct_password, password):
         print("User authenticated successfully.")
         return True
+    return False
+
+def authenticate_with_secondary(username: str, password: str) -> bool:
+    """
+    Authenticate a user with their secondary password.
+    This should be used for sensitive operations like data deletion.
+    """
+    config = _read_toml(".streamlit/secrets.toml")
+    
+    correct_username = config.get("app", {}).get("username", "")
+    secondary_password = config.get("app", {}).get("secondary_password", "")
+    
+    if username == correct_username and _verify_password(secondary_password, password):
+        print("User authenticated with secondary password successfully.")
+        return True
+    print("Secondary password authentication failed.")
     return False
 
 if __name__ == "__main__":    
