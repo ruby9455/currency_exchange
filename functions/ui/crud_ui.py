@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from functions.ui.db_func_ui import create_db_and_collection_input, prepare_data_for_existing_form, execute_db_operation, get_form_from_data, get_collection_data_wrapper, execute_batch_operations, handle_hidden_fields
+from functions.ui.db_func_ui import create_db_and_collection_input, prepare_data_for_existing_form, execute_db_operation, get_form_from_data, get_collection_data_wrapper, execute_batch_operations, clean_up_data
 
 def get_create_table_page():
     from functions.db.mongo_collection_management import create_collection
@@ -82,7 +82,7 @@ def get_insert_data_page():
                                     new_doc[col] = new_value
                             
                             if new_doc:
-                                new_doc = handle_hidden_fields(operation_type="insert", data=new_doc)
+                                new_doc = clean_up_data(operation_type="insert", data=new_doc, hidden_fields=True)
                                 documents_to_insert.append(new_doc)
                                 
                         if st.button("Insert Data", disabled=not documents_to_insert):
@@ -98,6 +98,7 @@ def get_insert_data_page():
         else:
             get_blank_form(disabled=False)
             data = prepare_data_for_blank_form()
+            data = clean_up_data(operation_type="insert", data=data, hidden_fields=True)
             if st.button("Insert Data", disabled=not data):
                 if db_name and collection_name:
                     execute_db_operation("insert", data=data)
@@ -127,7 +128,7 @@ def get_insert_data_page():
                                 new_doc[col] = new_value
                         
                         if new_doc:
-                            new_doc = handle_hidden_fields(operation_type="insert", data=new_doc)
+                            new_doc = clean_up_data(operation_type="insert", data=new_doc, hidden_fields=True)
                             documents_to_insert.append(new_doc)
                     
                     if st.button("Insert Data", disabled=not documents_to_insert):
@@ -143,6 +144,7 @@ def get_insert_data_page():
         else:
             get_form_from_data(data=collection_data)
             data = prepare_data_for_existing_form()
+            data = clean_up_data(operation_type="insert", data=data, hidden_fields=True)
             if st.button(label="Insert Data", disabled=not data):
                 if db_name and collection_name:
                     execute_db_operation("insert", data=data)
@@ -200,7 +202,7 @@ def get_update_data_page():
                         updated_data[_id] = {}
                         for col, new_value in values.items():
                             updated_data[_id][col] = new_value
-                        updated_data[_id]["_updated_at"] = pd.Timestamp.now()
+                        updated_data[_id] = clean_up_data(operation_type="update", data=updated_data[_id], hidden_fields=True)
                     if st.button("Update Data", disabled=not updated_data):
                         if db_name and collection_name:
                             # Use batch update for efficiency
@@ -235,7 +237,7 @@ def get_update_data_page():
                         if not col.startswith("_") and "field_value_" + col in st.session_state:
                             if st.session_state["field_value_" + col] != selected_row_data[col].values[0]:
                                 updated_data[col] = st.session_state["field_value_" + col]
-                            
+                    updated_data = clean_up_data(operation_type="update", data=updated_data, hidden_fields=False)
                     if st.button("Update Data", disabled=not updated_data):
                         if db_name and collection_name:
                             execute_db_operation("update", data=updated_data, query={"_id": selected_row_data["_id"].values[0]})

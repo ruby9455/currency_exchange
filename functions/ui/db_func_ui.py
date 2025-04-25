@@ -265,18 +265,23 @@ def prepare_data_for_blank_form():
         if field_value == "":
             continue
         
-        if field_type == "String":
+        try:
+            if field_type == "String":
+                data[field_name] = str(field_value)
+            elif field_type == "Integer":
+                data[field_name] = int(field_value)
+            elif field_type == "Float":
+                data[field_name] = float(field_value)
+            elif field_type == "Boolean":
+                data[field_name] = bool(field_value)
+            elif field_type == "Date":
+                data[field_name] = pd.to_datetime(field_value)
+            else:
+                st.warning(f"Unsupported field type: {field_type}")
+        except ValueError as e:
+            st.warning(f"Invalid value for field '{field_name}': {field_value}. Error: {e}")
+            # Keep as string if conversion fails
             data[field_name] = str(field_value)
-        elif field_type == "Integer":
-            data[field_name] = int(field_value)
-        elif field_type == "Float":
-            data[field_name] = float(field_value)
-        elif field_type == "Boolean":
-            data[field_name] = bool(field_value)
-        elif field_type == "Date":
-            data[field_name] = pd.to_datetime(field_value)
-        else:
-            st.warning(f"Unsupported field type: {field_type}")
             
     # clear the session state for field names, types, and values
     for key in field_names + field_types + field_values:
@@ -321,7 +326,7 @@ def get_data_ui():
             return data
     return None
 
-def handle_hidden_fields(operation_type: Literal["insert", "update", "delete"], data):
+def _handle_hidden_fields(operation_type: Literal["insert", "update", "delete"], data):
     """
     Handle hidden fields in the form based on the operation type.
     
@@ -344,7 +349,7 @@ def handle_hidden_fields(operation_type: Literal["insert", "update", "delete"], 
     
     return data
 
-def handle_data_type(data):
+def _handle_data_types(data):
     """
     Handle data types for the fields in the form.
     
@@ -356,17 +361,61 @@ def handle_data_type(data):
     """
     for key, value in data.items():
         if isinstance(value, str):
+            # Date or datetime conversion
             try:
                 # Try to convert to datetime
                 data[key] = pd.to_datetime(value)
+                continue  # Skip further processing if this succeeds
             except ValueError:
                 pass  # Keep as string if conversion fails
+            
+            # Integer or float conversion
+            value = value.strip() 
+            
+            # Check for integer
+            if value.lstrip('-').isdigit():
+                data[key] = int(value)
+                continue
+                
+            # Check for float
+            try:
+                float_value = float(value)
+                if float_value.is_integer():
+                    data[key] = int(float_value)
+                else:
+                    data[key] = float_value
+            except ValueError:
+                pass
+                
         elif isinstance(value, bool):
             data[key] = bool(value)
         elif isinstance(value, (int, float)):
             data[key] = float(value)
     
     return data
+
+def convert_value_to_capitalized(data):
+    for key, value in data.items():
+        if key in ["from_curr", "to_curr"]:
+            if not pd.isna(value):
+                data[key] = value.upper()
+    return data
+
+def clean_up_data(operation_type: Literal["insert", "update", "delete"], data, hidden_fields: bool = False):
+    """
+    Clean up the data by removing empty fields and converting values to appropriate types.
+    
+    Args:
+        data: The data to be cleaned
+    """
+    cleaned_data = {k: v for k, v in data.items() if v not in [None, "", pd.NA]}
+    
+    if hidden_fields:
+        cleaned_data = _handle_hidden_fields(operation_type=operation_type, data=cleaned_data)
+    cleaned_data = _handle_data_types(cleaned_data)
+    cleaned_data = convert_value_to_capitalized(cleaned_data)
+    
+    return cleaned_data
 
 @st.dialog("Confirmation Dialog")
 def confirmation_dialog(message: str, on_confirm: 'Callable', on_cancel: 'Callable', args=None, kwargs=None):
