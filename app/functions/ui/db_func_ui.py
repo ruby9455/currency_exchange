@@ -409,7 +409,7 @@ def clean_up_data(operation_type: Literal["insert", "update", "delete"], data, h
     Args:
         data: The data to be cleaned
     """
-    cleaned_data = {k: v for k, v in data.items() if v not in [None, "", pd.NA]}
+    cleaned_data = {k: v for k, v in data.items() if not (v is None or v == "" or pd.isna(v))}
     
     if hidden_fields:
         cleaned_data = _handle_hidden_fields(operation_type=operation_type, data=cleaned_data)
