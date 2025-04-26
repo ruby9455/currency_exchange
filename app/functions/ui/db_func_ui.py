@@ -3,6 +3,7 @@ import streamlit as st
 from functions.db.mongo_connection import get_mongo_client
 from functions.db.mongo_collection_management import get_all_databases, get_all_collections
 from typing import Literal
+
 @st.cache_resource
 def get_cached_mongo_client():
     """
@@ -432,7 +433,8 @@ def confirmation_dialog(message: str, on_confirm: 'Callable', on_cancel: 'Callab
     from functions.ui.auth_ui import check_secondary_password_ui
     st.write(message)
     secondary_pw = st.text_input("Enter secondary password", type="password", key="secondary_password")
-    if st.button("Confirm"):
+    left_btn, right_btn = st.columns([1, 1], vertical_alignment="center")
+    if left_btn.button("Confirm"):
         logged_in_user = st.session_state.get("logged_in_user", "")
         if not logged_in_user:
             st.warning("Login ID is not set.")
@@ -447,7 +449,8 @@ def confirmation_dialog(message: str, on_confirm: 'Callable', on_cancel: 'Callab
                 on_confirm(**kwargs)
             else:
                 on_confirm()
+            st.rerun()
         else:
             st.warning("Invalid secondary password.")
-    if st.button("Cancel"):
+    if right_btn.button("Cancel"):
         on_cancel()
