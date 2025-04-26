@@ -1,31 +1,48 @@
-import sys
+import bcrypt
+from functions.utils import _read_toml
+from functions.db.mongo_connection import get_mongo_client
 
-def _read_toml(file_path: str) -> dict:
-    """
-    Read a TOML file and return its contents as a dictionary.
-    """
-    import toml
-    try:
-        with open(file_path, 'r') as file:
-            data = toml.load(file)
-        return data
-    except Exception as e:
-        print(f"Error reading TOML file: {e}")
-        return {}
-    
 def _get_hashed_password(password: str) -> str:
     """
     Hash a password using SHA-256.
+    Deprecated: Use bcrypt_hash_password instead.
     """
     import hashlib
     return hashlib.sha256(password.encode()).hexdigest()
 
 def _verify_password(stored_password: str, provided_password: str) -> bool:
     """
-    Verify a stored password against a provided password.
+    Verify a stored password against a provided password using SHA-256.
+    Deprecated: Use bcrypt_verify_password instead.
     """
     import hashlib
     return stored_password == hashlib.sha256(provided_password.encode()).hexdigest()
+
+def bcrypt_hash_password(password: str) -> bytes:
+    """
+    Hash a password using bcrypt.
+    """
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed
+
+def bcrypt_verify_password(stored_password: bytes, provided_password: str) -> bool:
+    """
+    Verify a stored password against a provided password using bcrypt.
+    """
+    return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password)
+
+def get_user_collection(db_name: str):
+    """
+    Get the users collection from MongoDB.
+    """
+    client = get_mongo_client()
+    if client is None:
+        print("Failed to connect to MongoDB.")
+        return None
+    
+    db = client[db_name]
+    return db["users"]
 
 def store_password(password: str) -> None:
     """
@@ -82,24 +99,97 @@ def store_secondary_password(password: str) -> None:
         toml.dump(config, file)
         
     print("Secondary password stored successfully.")
+
+def create_admin_user(db_name: str, username: str, password: str) -> bool:
+    """
+    Create an admin user in the MongoDB users collection.
+    """
+    users = get_user_collection(db_name=db_name)
+    if users is None:
+        print("Failed to connect to MongoDB.")
+        return False
     
-def authenticate_user(username: str, password: str) -> bool:
+    # Check if user already exists
+    existing_user = users.find_one({"username": username})
+    if existing_user:
+        print(f"User '{username}' already exists.")
+        return False
+    
+    # Create admin user
+    user_doc = {
+        "username": username,
+        "display_name": "Administrator",
+        "email": "",
+        "password": bcrypt_hash_password(password),
+        "role": "admin",
+        "created_at": _get_current_datetime(),
+        "updated_at": _get_current_datetime(),
+        "active": True
+    }
+    
+    result = users.insert_one(user_doc)
+    if result.inserted_id:
+        print(f"Admin user '{username}' created successfully.")
+        return True
+    else:
+        print("Failed to create admin user.")
+        return False
+
+def _get_current_datetime():
+    """
+    Get current datetime for MongoDB documents.
+    """
+    from datetime import datetime
+    return datetime.now()
+
+def authenticate_user(db_name: str, username: str, password: str) -> bool:
     """
     Authenticate a user based on username and password.
+    First tries MongoDB, falls back to TOML if MongoDB authentication fails.
     """
-    # For demonstration purposes, we will use a hardcoded username and password
-    # In a real application, you would check against a database or other secure storage
-    config = _read_toml(".streamlit/secrets.toml")
+    # Try MongoDB authentication first
+    try:
+        users = get_user_collection(db_name=db_name)
+        if users is None:
+            print("Failed to connect to MongoDB.")
+            return False
+        user = users.find_one({"username": username, "active": True})
+        
+        if user and user.get("password"):
+            # Check if password is stored as bytes (bcrypt) or string (old SHA-256)
+            stored_password = user["password"]
+            
+            if isinstance(stored_password, bytes):
+                # Bcrypt password
+                if bcrypt_verify_password(stored_password, password):
+                    print("User authenticated successfully via MongoDB (bcrypt).")
+                    return True
+            else:
+                # Legacy SHA-256 password (string)
+                if _verify_password(stored_password, password):
+                    print("User authenticated successfully via MongoDB (SHA-256).")
+                    # Consider upgrading to bcrypt
+                    return True
+        
+    except Exception as e:
+        print(f"MongoDB authentication error: {e}")
     
-    correct_username = config.get("app", {}).get("username", "")
-    correct_password = config.get("app", {}).get("password", "")
+    # Fall back to TOML authentication for backward compatibility
+    try:
+        config = _read_toml(".streamlit/secrets.toml")
+        
+        correct_username = config.get("app", {}).get("username", "")
+        correct_password = config.get("app", {}).get("password", "")
+        
+        if username == correct_username and _verify_password(correct_password, password):
+            print("User authenticated successfully via TOML.")
+            return True
+    except Exception as e:
+        print(f"TOML authentication error: {e}")
     
-    if username == correct_username and _verify_password(correct_password, password):
-        print("User authenticated successfully.")
-        return True
     return False
 
-def authenticate_with_secondary(username: str, password: str) -> bool:
+def authenticate_with_secondary(username: str, password: str) -> bool: # TODO: revise this function to use bcrypt and mongodb
     """
     Authenticate a user with their secondary password.
     This should be used for sensitive operations like data deletion.
@@ -115,38 +205,21 @@ def authenticate_with_secondary(username: str, password: str) -> bool:
     print("Secondary password authentication failed.")
     return False
 
-if __name__ == "__main__":    
-    if len(sys.argv) < 2:
-        print("Usage: python shared_func.py <command>")
-        print("Available commands: store_password, list_functions")
-        sys.exit(1)
+def check_user_role(db_name: str, username: str, required_roles: list) -> bool:
+    """
+    Check if a user has one of the required roles.
+    """
+    try:
+        users = get_user_collection(db_name=db_name)
+        if users is None:
+            print("Failed to connect to MongoDB.")
+            return False
+        user = users.find_one({"username": username, "active": True})
         
-    command = sys.argv[1]
+        if user and user.get("role") in required_roles:
+            return True
+    except Exception as e:
+        print(f"Error checking user role: {e}")
     
-    if command == "store_password":
-        if len(sys.argv) < 3:
-            print("Usage: python shared_func.py store_password <password>")
-            sys.exit(1)
-        password = sys.argv[2]
-        store_password(password)
-    elif command == "store_secondary_password":
-        if len(sys.argv) < 3:
-            print("Usage: python shared_func.py store_secondary_password <password>")
-            sys.exit(1)
-        password = sys.argv[2]
-        store_secondary_password(password)
-    elif command == "list_functions":
-        # Get all functions from locals() that don't start with underscore (non-private)
-        functions = [name for name, obj in locals().items() 
-                    if callable(obj) and not name.startswith('_')]
-        print(f"Available functions: {', '.join(functions)}")
-        
-        # Include private functions with underscore if needed
-        private_functions = [name for name, obj in locals().items() 
-                           if callable(obj) and name.startswith('_') and not name.startswith('__')]
-        if private_functions:
-            print(f"Private helper functions: {', '.join(private_functions)}")
-    else:
-        print(f"Unknown command: {command}")
-        print("Available commands: store_password, list_functions")
-        sys.exit(1)
+    return False
+
