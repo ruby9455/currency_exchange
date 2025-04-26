@@ -2,6 +2,18 @@ import pandas as pd
 import streamlit as st
 from functions.ui.db_func_ui import create_db_and_collection_input, prepare_data_for_existing_form, execute_db_operation, get_form_from_data, get_collection_data_wrapper, execute_batch_operations, clean_up_data
 
+def _tidy_up_collection_data(collection_data: 'pd.DataFrame', hide_id: bool=True) -> pd.DataFrame:
+    display_cols = [col for col in collection_data.columns.tolist() if not col.startswith("_")]
+    hidden_cols = [col for col in collection_data.columns.tolist() if col.startswith("_")]
+    if hide_id:
+        final_column_order = display_cols + [col for col in hidden_cols if col != "_id"]
+    else:
+        final_column_order = ["_id"] + display_cols + [col for col in hidden_cols if col != "_id"]
+    rename_final_column_order = [col.replace("_", " ").strip().title() for col in final_column_order]
+    collection_data = collection_data.sort_values(by="date", ascending=False).reset_index(drop=True) if "date" in collection_data.columns else collection_data
+    collection_data = collection_data.rename(columns={col: rename_col for col, rename_col in zip(final_column_order, rename_final_column_order)})[rename_final_column_order]
+    return collection_data
+
 def get_create_table_page():
     from functions.db.mongo_collection_management import create_collection
     from functions.ui.db_func_ui import get_cached_mongo_client
@@ -162,7 +174,8 @@ def get_fetch_data_page():
     
     collection_data = get_collection_data_wrapper(db_name, collection_name)
     if collection_data is not None:
-        st.dataframe(data=collection_data, hide_index=True)
+        collection_data = _tidy_up_collection_data(collection_data=collection_data, hide_id=True)
+        st.dataframe(data=collection_data, hide_index=True, use_container_width=True)
     else:
         st.warning("No data found in the specified collection.")
 
