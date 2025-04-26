@@ -1,5 +1,12 @@
 import streamlit as st
 
+st.set_page_config(
+    page_title="Currency Exchange",
+    page_icon=":money_with_wings:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
 st.title("港幣兌換澳元")
 st.number_input("港幣", value=200000, step=1, key="hkd")
 l, r = st.columns(2)
