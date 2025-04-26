@@ -17,6 +17,7 @@ def get_all_databases(client: MongoClient) -> list:
     """
     # Get a list of all databases
     databases = client.list_database_names()
+    databases = [db for db in databases if db not in ["admin", "local", "config"]]
     return databases
 
 def get_all_collections(client: MongoClient, db_name: str) -> list:
