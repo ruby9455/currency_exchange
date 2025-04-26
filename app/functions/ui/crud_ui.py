@@ -285,6 +285,5 @@ def get_delete_data_page():
                             on_cancel=st.rerun,
                             args=("delete", ids_to_delete),
                         )
-                        st.rerun()
                     else:
                         st.warning("Please enter both database and collection names.")
