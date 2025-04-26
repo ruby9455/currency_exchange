@@ -1,3 +1,4 @@
+from typing import Optional
 def _read_toml(file_path: str) -> dict:
     """
     Read a TOML file and return its contents as a dictionary.
@@ -28,3 +29,16 @@ def _get_default_collection():
     config = _read_toml(".streamlit/secrets.toml")
     collection_name = config.get("mongo", {}).get("collection_name", "")
     return collection_name
+
+def _load_css(file_path: Optional[str] = None) -> None:
+    """
+    Load CSS styles from a file.
+    """
+    import streamlit as st
+    with open('app/css/style.css') as f:
+        style = f.read()
+        
+    if file_path:
+        with open(file_path) as f:
+            style += f.read()
+    st.markdown(f'<style>{style}</style>', unsafe_allow_html=True)
