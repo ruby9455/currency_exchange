@@ -31,7 +31,7 @@ def db_actions():
 
 def main():
     init_auth_state()
-    nav_bar()
+    # nav_bar()
     header_placeholder = st.empty()
     content_placeholder = st.empty()
     

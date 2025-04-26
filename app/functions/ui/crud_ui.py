@@ -157,7 +157,7 @@ def get_fetch_data_page():
     db_name, collection_name = create_db_and_collection_input()
     st.divider()
     
-    if db_name is None and collection_name is None:a
+    if db_name is None and collection_name is None:
         st.stop()
     
     collection_data = get_collection_data_wrapper(db_name, collection_name)
@@ -181,6 +181,7 @@ def get_update_data_page():
         st.warning("No data found in the specified collection.")
         st.stop()
     else:
+        collection_data = collection_data.sort_values(by="date", ascending=False).reset_index(drop=True) if "date" in collection_data.columns else collection_data
         display_cols = [col for col in collection_data.columns.tolist() if not col.startswith("_")]
         batch_mode = st.toggle("Use batch update mode", value=False, help="Update all documents in a single database operation")
         
@@ -203,7 +204,12 @@ def get_update_data_page():
                         updated_data[_id] = {}
                         for col, new_value in values.items():
                             updated_data[_id][col] = new_value
-                        updated_data[_id] = clean_up_data(operation_type="update", data=updated_data[_id], hidden_fields=True)
+                        # if only either from_amt or to_amt is updated, then copy the other one, for updating the _rate
+                        if "from_amt" in updated_data[_id] and "to_amt" not in updated_data[_id]:
+                            updated_data[_id]["to_amt"] = collection_data.iloc[row]["to_amt"]
+                        elif "to_amt" in updated_data[_id] and "from_amt" not in updated_data[_id]:
+                            updated_data[_id]["from_amt"] = collection_data.iloc[row]["from_amt"]
+                        updated_data[_id] = clean_up_data(operation_type="update", data=updated_data[_id], hidden_fields=True, cal_rate=True)
                     if st.button("Update Data", disabled=not updated_data):
                         if db_name and collection_name:
                             # Use batch update for efficiency
@@ -238,7 +244,11 @@ def get_update_data_page():
                         if not col.startswith("_") and "field_value_" + col in st.session_state:
                             if st.session_state["field_value_" + col] != selected_row_data[col].values[0]:
                                 updated_data[col] = st.session_state["field_value_" + col]
-                    updated_data = clean_up_data(operation_type="update", data=updated_data, hidden_fields=False)
+                    if "from_amt" in updated_data and "to_amt" not in updated_data:
+                        updated_data["to_amt"] = selected_row_data["to_amt"].values[0]
+                    elif "to_amt" in updated_data and "from_amt" not in updated_data:
+                        updated_data["from_amt"] = selected_row_data["from_amt"].values[0]
+                    updated_data = clean_up_data(operation_type="update", data=updated_data, hidden_fields=False, cal_rate=True)
                     if st.button("Update Data", disabled=not updated_data):
                         if db_name and collection_name:
                             execute_db_operation("update", data=updated_data, query={"_id": selected_row_data["_id"].values[0]})
@@ -261,6 +271,7 @@ def get_delete_data_page():
         st.warning("No data found in the specified collection.")
         st.stop()
     else:
+        collection_data = collection_data.sort_values(by="date", ascending=False).reset_index(drop=True) if "date" in collection_data.columns else collection_data
         display_cols = [col for col in collection_data.columns.tolist() if not col.startswith("_")]
         st.dataframe(
             data=collection_data,

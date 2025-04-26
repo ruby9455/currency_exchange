@@ -415,7 +415,7 @@ def clean_up_data(operation_type: Literal["insert", "update", "delete"], data, h
         cleaned_data = _handle_hidden_fields(operation_type=operation_type, data=cleaned_data)
     cleaned_data = _handle_data_types(cleaned_data)
     cleaned_data = convert_value_to_capitalized(cleaned_data)
-    print(f"Calculate rate: {cal_rate}")
+
     if cal_rate:
         from_amt = cleaned_data.get("from_amt", None)
         to_amt = cleaned_data.get("to_amt", None)
