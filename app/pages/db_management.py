@@ -5,7 +5,7 @@ from functions.ui.auth_page import init_auth_state, login_page, auth_header
 
 def db_actions():
     left_col, right_col = st.columns([2, 8])
-    default_action_index = 2
+    default_action_index = 0
     with left_col:  
         st.selectbox(
             label="Select an action", 
