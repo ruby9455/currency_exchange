@@ -205,7 +205,7 @@ def authenticate_with_secondary(username: str, password: str) -> bool: # TODO: r
     print("Secondary password authentication failed.")
     return False
 
-def check_user_role(db_name: str, username: str, required_roles: list) -> bool:
+def check_user_role(db_name: str, username: str, required_roles: list[str]) -> bool:
     """
     Check if a user has one of the required roles.
     """

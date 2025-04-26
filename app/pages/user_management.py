@@ -1,40 +1,15 @@
 import bcrypt
 from datetime import datetime
 import streamlit as st
-from functions.ui.auth_ui import get_user_collection_ui, authenticate_user_ui
+from functions.ui.auth_ui import get_user_collection_ui
+from functions.ui.auth_page import init_auth_state, login_page, logout_page, auth_header, auth_sidebar
 
-def init_page():
-    if "logged_in" not in st.session_state: 
-        st.session_state.logged_in = False
-    if "login_id" not in st.session_state: 
-        st.session_state.login_id = ""
-    if "user_action" not in st.session_state:
-        st.session_state.user_action = ""
+def init_user_management_state():
+    """Initialize user management specific state variables"""
     if "selected_user" not in st.session_state:
         st.session_state.selected_user = None
-
-def login_page():
-    st.title("Login Page")
-    st.text_input("Enter Login ID", key="login_id")
-    st.text_input("Enter Password", type="password", key="password")
-    
-    if st.button("Login"):
-        if authenticate_user_ui(st.session_state.login_id, st.session_state.password):
-            st.session_state.logged_in = True
-            st.session_state.logged_in_user = st.session_state.login_id
-            del st.session_state.password
-            st.success("Login successful!")
-            st.rerun()
-        else:
-            st.error("Invalid login credentials. Please try again.")
-
-def logout_page():
-    st.session_state.logged_in = False
-    if "logged_in_user" in st.session_state:
-        del st.session_state.logged_in_user
-    if "password" in st.session_state: 
-        del st.session_state.password
-    st.success("Logged out successfully.")
+    if "user_action" not in st.session_state:
+        st.session_state.user_action = ""
 
 def hash_password(password):
     """Hash password using bcrypt"""
@@ -273,8 +248,13 @@ def user_actions():
             st.warning("Please select an action from the dropdown.")
 
 def main():
-    init_page()
-    header = st.columns([1, 5, 1])
+    # Initialize authentication state
+    init_auth_state()
+    
+    # Initialize user management specific state
+    init_user_management_state()
+    
+    header = auth_header()
     
     header[1].title("User Management")
     content = st.container()
@@ -283,16 +263,10 @@ def main():
         with content:
             login_page()
     else:
-        header[0].write(f"Welcome {st.session_state.logged_in_user}!")
-        header[2].button("Logout", key="logout", on_click=logout_page)
         content.empty()
         
         with content:
             user_actions()
-        
-        if st.sidebar.button("Logout"):
-            st.session_state.logged_in = False
-            st.success("Logged out successfully.")
 
 if __name__ == "__main__":
     st.set_page_config(

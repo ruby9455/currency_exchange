@@ -1,6 +1,4 @@
 import streamlit as st
-from functions.ui.db_func_ui import get_cached_mongo_client
-from functions.db.mongo_collection_management import get_all_databases
 
 def _get_db():
     """
@@ -51,3 +49,12 @@ def authenticate_user_ui(username: str, password: str) -> bool:
     db_name = _get_db()
     
     return authenticate_user(db_name=db_name, username=username, password=password)
+
+def check_user_role_ui(username: str, required_roles: list[str]) -> bool:
+    """
+    Check the user role in the database.
+    """
+    from functions.auth_func import check_user_role
+    db_name = _get_db()
+    
+    return check_user_role(db_name=db_name, username=username, required_roles=required_roles)
