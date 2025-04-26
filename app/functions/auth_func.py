@@ -100,7 +100,7 @@ def store_secondary_password(password: str) -> None:
         
     print("Secondary password stored successfully.")
 
-def create_admin_user(db_name: str, username: str, password: str) -> bool:
+def create_admin_user(db_name: str, username: str, password: str, secondary_password: str) -> bool:
     """
     Create an admin user in the MongoDB users collection.
     """
@@ -118,9 +118,8 @@ def create_admin_user(db_name: str, username: str, password: str) -> bool:
     # Create admin user
     user_doc = {
         "username": username,
-        "display_name": "Administrator",
-        "email": "",
         "password": bcrypt_hash_password(password),
+        "secondary_password": bcrypt_hash_password(secondary_password),
         "role": "admin",
         "created_at": _get_current_datetime(),
         "updated_at": _get_current_datetime(),

@@ -46,13 +46,18 @@ def create_admin_user_helper():
     print(f"Selected database: {db_name}")
     username = input("Enter username for admin user: ")
     password = input("Enter password for admin user: ")
-
     confirm_password = input("Confirm password for admin user: ")
     if password != confirm_password:
         print("Passwords do not match. Admin user not created.")
         return
     
-    if create_admin_user(db_name, username, password):
+    secondary_password = input("Enter secondary password for admin user: ")
+    confirm_secondary_password = input("Confirm secondary password for admin user: ")
+    if secondary_password != confirm_secondary_password:
+        print("Secondary passwords do not match. Admin user not created.")
+        return
+    
+    if create_admin_user(db_name=db_name, username=username, password=password, secondary_password=secondary_password):
         print("Admin user created successfully.")
     else:
         print("Failed to create admin user.")

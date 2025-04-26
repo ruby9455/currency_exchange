@@ -2,7 +2,7 @@ import bcrypt
 from datetime import datetime
 import streamlit as st
 from functions.ui.auth_ui import get_user_collection_ui
-from functions.ui.auth_page import init_auth_state, login_page, logout_page, auth_header, auth_sidebar
+from functions.ui.auth_page import init_auth_state, login_page, auth_header
 
 def init_user_management_state():
     """Initialize user management specific state variables"""
@@ -259,7 +259,7 @@ def main():
     header[1].title("User Management")
     content = st.container()
     
-    if not st.session_state.logged_in:
+    if not st.session_state.is_logged_in:
         with content:
             login_page()
     else:
