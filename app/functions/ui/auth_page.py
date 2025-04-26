@@ -39,7 +39,7 @@ def logout_page():
 
 def auth_header(page_title: str):
     """Render the authentication header with welcome message and logout button"""
-    header = st.columns([1, 8, 1], gap="small")
+    header = st.columns([1, 8, 1], gap="small", vertical_alignment="center")
     if st.session_state.is_logged_in:
         header[0].write(f"Welcome {st.session_state.logged_in_user}!")
         header[1].title(page_title)
