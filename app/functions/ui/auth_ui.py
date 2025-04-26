@@ -33,6 +33,15 @@ def create_admin_user_wrapper():
                 st.error("Failed to create admin user.")
         else:
             st.warning("Please fill in both fields.")
+
+def get_user_collection_ui():
+    """
+    Get user collections from the database.
+    """
+    from functions.auth_func import get_user_collection
+    db_name = _get_db()
+    
+    return get_user_collection(db_name=db_name)
             
 def authenticate_user_ui(username: str, password: str) -> bool:
     """
