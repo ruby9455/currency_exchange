@@ -1,6 +1,6 @@
 import streamlit as st
 from functions.ui.crud_ui import get_create_table_page, get_insert_data_page, get_fetch_data_page, get_update_data_page, get_delete_data_page
-from functions.auth_func import authenticate_user
+from functions.ui.auth_ui import authenticate_user_ui
 
 def init_page():
     if "logged_in" not in st.session_state: 
@@ -14,7 +14,7 @@ def login_page():
     st.text_input("Enter Password", type="password", key="password", value="V5i9akab.")
     
     if st.button("Login"):
-        if authenticate_user(st.session_state.login_id, st.session_state.password):
+        if authenticate_user_ui(st.session_state.login_id, st.session_state.password):
             st.session_state.logged_in = True
             st.session_state.logged_in_user = st.session_state.login_id
             del st.session_state.password
