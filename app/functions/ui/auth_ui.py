@@ -58,3 +58,12 @@ def check_user_role_ui(username: str, required_roles: list[str]) -> bool:
     db_name = _get_db()
     
     return check_user_role(db_name=db_name, username=username, required_roles=required_roles)
+
+def check_secondary_password_ui(username: str, secondary_password: str) -> bool:
+    """
+    Check the secondary password for the user.
+    """
+    from functions.auth_func import check_secondary_password
+    db_name = _get_db()
+    
+    return check_secondary_password(db_name=db_name, username=username, secondary_password=secondary_password)

@@ -429,7 +429,7 @@ def confirmation_dialog(message: str, on_confirm: 'Callable', on_cancel: 'Callab
         args: Tuple of positional arguments to pass to on_confirm
         kwargs: Dictionary of keyword arguments to pass to on_confirm
     """
-    from functions.auth_func import authenticate_with_secondary
+    from functions.ui.auth_ui import check_secondary_password_ui
     st.write(message)
     secondary_pw = st.text_input("Enter secondary password", type="password", key="secondary_password")
     if st.button("Confirm"):
@@ -437,7 +437,7 @@ def confirmation_dialog(message: str, on_confirm: 'Callable', on_cancel: 'Callab
         if not logged_in_user:
             st.warning("Login ID is not set.")
             return
-        if authenticate_with_secondary(username=logged_in_user, password=secondary_pw):
+        if check_secondary_password_ui(username=logged_in_user, secondary_password=secondary_pw):
             # Call on_confirm with args and kwargs if provided
             if args is not None and kwargs is not None:
                 on_confirm(*args, **kwargs)

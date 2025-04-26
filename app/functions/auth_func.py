@@ -47,9 +47,10 @@ def get_user_collection(db_name: str):
 def store_password(password: str) -> None:
     """
     Store a hashed password in a TOML file.
+    Deprecated: Storing passwords on MongoDB is preferred.
     """
     import toml
-    hashed_password = _get_hashed_password(password)
+    hashed_password = bcrypt_hash_password(password)
     config = _read_toml(".streamlit/secrets.toml")
     
     if "app" not in config:
@@ -75,9 +76,10 @@ def store_password(password: str) -> None:
 def store_secondary_password(password: str) -> None:
     """
     Store a secondary hashed password in a TOML file.
+    Deprecated: Storing passwords on MongoDB is preferred.
     """
     import toml
-    hashed_password = _get_hashed_password(password)
+    hashed_password = bcrypt_hash_password(password)
     config = _read_toml(".streamlit/secrets.toml")
     
     if "app" not in config:
@@ -158,50 +160,34 @@ def authenticate_user(db_name: str, username: str, password: str) -> bool:
             # Check if password is stored as bytes (bcrypt) or string (old SHA-256)
             stored_password = user["password"]
             
-            if isinstance(stored_password, bytes):
-                # Bcrypt password
-                if bcrypt_verify_password(stored_password, password):
-                    print("User authenticated successfully via MongoDB (bcrypt).")
-                    return True
-            else:
-                # Legacy SHA-256 password (string)
-                if _verify_password(stored_password, password):
-                    print("User authenticated successfully via MongoDB (SHA-256).")
-                    # Consider upgrading to bcrypt
-                    return True
+            if bcrypt_verify_password(stored_password, password):
+                print("User authenticated successfully via MongoDB (bcrypt).")
+                return True
         
     except Exception as e:
         print(f"MongoDB authentication error: {e}")
     
-    # Fall back to TOML authentication for backward compatibility
-    try:
-        config = _read_toml(".streamlit/secrets.toml")
-        
-        correct_username = config.get("app", {}).get("username", "")
-        correct_password = config.get("app", {}).get("password", "")
-        
-        if username == correct_username and _verify_password(correct_password, password):
-            print("User authenticated successfully via TOML.")
-            return True
-    except Exception as e:
-        print(f"TOML authentication error: {e}")
-    
     return False
 
-def authenticate_with_secondary(username: str, password: str) -> bool: # TODO: revise this function to use bcrypt and mongodb
+def check_secondary_password(db_name: str, username: str, secondary_password: str) -> bool:
     """
-    Authenticate a user with their secondary password.
-    This should be used for sensitive operations like data deletion.
+    Check if the provided secondary password matches the stored one.
     """
-    config = _read_toml(".streamlit/secrets.toml")
+    try:
+        users = get_user_collection(db_name=db_name)
+        if users is None:
+            print("Failed to connect to MongoDB.")
+            return False
+        user = users.find_one({"username": username, "active": True})
+        
+        if user and user.get("secondary_password"):
+            stored_secondary_password = user["secondary_password"]
+            if bcrypt_verify_password(stored_secondary_password, secondary_password):
+                print("Secondary password verified successfully.")
+                return True
+    except Exception as e:
+        print(f"Error verifying secondary password: {e}")
     
-    correct_username = config.get("app", {}).get("username", "")
-    secondary_password = config.get("app", {}).get("secondary_password", "")
-    
-    if username == correct_username and _verify_password(secondary_password, password):
-        print("User authenticated with secondary password successfully.")
-        return True
-    print("Secondary password authentication failed.")
     return False
 
 def check_user_role(db_name: str, username: str, required_roles: list[str]) -> bool:
