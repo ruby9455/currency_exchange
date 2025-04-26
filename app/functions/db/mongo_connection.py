@@ -1,6 +1,6 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from functions.auth_func import _read_toml
+from functions.utils import _read_toml
     
 def _get_mongo_connection_string() -> str:
     """
@@ -9,10 +9,18 @@ def _get_mongo_connection_string() -> str:
     # Read the TOML file
     config = _read_toml(".streamlit/secrets.toml")
     
-    # Extract the connection string
+    # Extract the connection components
     username = config.get("mongo", {}).get("username", "")
     password = config.get("mongo", {}).get("password", "")
-    connection_string = f"mongodb+srv://{username}:{password}@cluster0.bgcvdvh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    host = config.get("mongo", {}).get("host", "")
+    protocol = config.get("mongo", {}).get("protocol", "")
+    options = config.get("mongo", {}).get("options", "")
+    
+    # Build the connection string
+    if protocol.endswith("://"):
+        connection_string = f"{protocol}{username}:{password}@{host}/{options}"
+    else:
+        connection_string = f"{protocol}://{username}:{password}@{host}/{options}"
     
     return connection_string
 
@@ -33,3 +41,4 @@ def get_mongo_client() -> MongoClient | None:
         client = None
     # Return the client
     return client
+    
