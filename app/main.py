@@ -1,11 +1,14 @@
 import streamlit as st
-
+from components.navigation import nav_bar
+from functions.ui.auth_page import init_auth_state
 st.set_page_config(
     page_title="Currency Exchange",
     page_icon=":money_with_wings:",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+init_auth_state()
+nav_bar()
 
 st.title("港幣兌換澳元")
 st.number_input("港幣", value=200000, step=1, key="hkd")
