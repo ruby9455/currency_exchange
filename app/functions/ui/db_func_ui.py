@@ -402,7 +402,7 @@ def convert_value_to_capitalized(data):
                 data[key] = value.upper()
     return data
 
-def clean_up_data(operation_type: Literal["insert", "update", "delete"], data, hidden_fields: bool = False):
+def clean_up_data(operation_type: Literal["insert", "update", "delete"], data, hidden_fields: bool = False, cal_rate: bool = False):
     """
     Clean up the data by removing empty fields and converting values to appropriate types.
     
@@ -415,7 +415,16 @@ def clean_up_data(operation_type: Literal["insert", "update", "delete"], data, h
         cleaned_data = _handle_hidden_fields(operation_type=operation_type, data=cleaned_data)
     cleaned_data = _handle_data_types(cleaned_data)
     cleaned_data = convert_value_to_capitalized(cleaned_data)
-    
+    print(f"Calculate rate: {cal_rate}")
+    if cal_rate:
+        from_amt = cleaned_data.get("from_amt", None)
+        to_amt = cleaned_data.get("to_amt", None)
+        if from_amt and to_amt:
+            if from_amt > to_amt:
+                cleaned_data["_rate"] = from_amt / to_amt
+            else:
+                cleaned_data["_rate"] = to_amt / from_amt
+    print("Cleaned Data:", cleaned_data)
     return cleaned_data
 
 @st.dialog("Confirmation Dialog")

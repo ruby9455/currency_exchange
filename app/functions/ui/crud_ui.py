@@ -38,6 +38,7 @@ def get_insert_data_page():
         st.stop()
     
     collection_data = get_collection_data_wrapper(db_name, collection_name)
+    # Check if the collection exists
     if collection_data is None:
         batch_mode = st.toggle("Use batch update mode", value=True, help="Update all documents in a single database operation")
         if batch_mode: 
@@ -82,7 +83,7 @@ def get_insert_data_page():
                                     new_doc[col] = new_value
                             
                             if new_doc:
-                                new_doc = clean_up_data(operation_type="insert", data=new_doc, hidden_fields=True)
+                                new_doc = clean_up_data(operation_type="insert", data=new_doc, hidden_fields=True, cal_rate=True)
                                 documents_to_insert.append(new_doc)
                                 
                         if st.button("Insert Data", disabled=not documents_to_insert):
@@ -98,7 +99,7 @@ def get_insert_data_page():
         else:
             get_blank_form(disabled=False)
             data = prepare_data_for_blank_form()
-            data = clean_up_data(operation_type="insert", data=data, hidden_fields=True)
+            data = clean_up_data(operation_type="insert", data=data, hidden_fields=True, cal_rate=True)
             if st.button("Insert Data", disabled=not data):
                 if db_name and collection_name:
                     execute_db_operation("insert", data=data)
@@ -128,7 +129,7 @@ def get_insert_data_page():
                                 new_doc[col] = new_value
                         
                         if new_doc:
-                            new_doc = clean_up_data(operation_type="insert", data=new_doc, hidden_fields=True)
+                            new_doc = clean_up_data(operation_type="insert", data=new_doc, hidden_fields=True, cal_rate=True)
                             documents_to_insert.append(new_doc)
                     
                     if st.button("Insert Data", disabled=not documents_to_insert):
@@ -144,7 +145,7 @@ def get_insert_data_page():
         else:
             get_form_from_data(data=collection_data)
             data = prepare_data_for_existing_form()
-            data = clean_up_data(operation_type="insert", data=data, hidden_fields=True)
+            data = clean_up_data(operation_type="insert", data=data, hidden_fields=True, cal_rate=True)
             if st.button(label="Insert Data", disabled=not data):
                 if db_name and collection_name:
                     execute_db_operation("insert", data=data)
@@ -156,7 +157,7 @@ def get_fetch_data_page():
     db_name, collection_name = create_db_and_collection_input()
     st.divider()
     
-    if db_name is None and collection_name is None:
+    if db_name is None and collection_name is None:a
         st.stop()
     
     collection_data = get_collection_data_wrapper(db_name, collection_name)
