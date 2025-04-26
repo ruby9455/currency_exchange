@@ -1,5 +1,5 @@
 APP_NAME = "Currency Exchange"
-MARGIN = 0.005
+MARGIN = 1  # Increased margin for better visibility and consistency
 PAGE_FILE_NAME_DICT = {
     "比較兌換方法": "main.py",
     "兌換紀錄": "pages/transaction_history.py",
@@ -21,13 +21,22 @@ def get_tabs(is_logged_in: bool, is_admin: bool):
         
     if is_admin:
         general_tabs.append("管理資料庫")
-        general_tabs.append("用戶管理")
+        general_tabs.append("管理用戶")
 
     return general_tabs, auth_tab
 
 def get_cols_ratio(is_logged_in: bool, is_admin: bool):
     tabs, auth_tab = get_tabs(is_logged_in, is_admin)
-
-    cols_ratio = [1] * (len(tabs) + len(auth_tab))
-    spacer_ratio = 1/(len(tabs)+len(auth_tab))
-    return [MARGIN] + cols_ratio[:-1] + [spacer_ratio] + [cols_ratio[-1]] + [MARGIN]
+    
+    # Create columns for all general tabs
+    general_tab_cols = [1] * len(tabs)
+    
+    # Create a spacer that will push the auth tab to the right
+    # Using a large value ensures it takes up all available space
+    spacer_ratio = 6
+    
+    # Create consistent margins on both sides
+    left_margin = right_margin = MARGIN
+    
+    # Combine all column ratios
+    return [left_margin] + general_tab_cols + [spacer_ratio] + [1] + [right_margin]

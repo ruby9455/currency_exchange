@@ -7,6 +7,7 @@ header {visibility: hidden;}
     --status-green: #00917C;
     --status-white: #e4e9eb;
     --primary-color: rgba(0, 122, 173, 1);
+    --nav-margin: 1rem;
 }
 .stApp {
     width: 100%;
@@ -35,6 +36,36 @@ div[data-testid="stSidebarCollapsedControl"] button {
     margin-top: -1rem;
     margin-bottom: 0rem;
     padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Apply consistent styling to all navigation items */
+[class*="nav-bar"] .stPageLink {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 0.5rem 0;
+}
+
+/* Style the auth tab (login/logout) to be right-aligned */
+[class*="nav-bar"] > div:nth-last-child(2) .stPageLink {
+    justify-content: flex-end !important;
+    text-align: right !important;
+}
+
+/* Make sure the first and last columns (margins) are equal width */
+[class*="nav-bar"] > div:first-child,
+[class*="nav-bar"] > div:last-child {
+    min-width: var(--nav-margin);
+    flex: 0 0 var(--nav-margin);
+}
+
+/* Make sure the spacer column grows to push auth tab to the right */
+[class*="nav-bar"] > div:nth-last-child(3) {
+    flex-grow: 1;
 }
 .st-key-nav-bar > div:not(:first-child) {
     display: none;
