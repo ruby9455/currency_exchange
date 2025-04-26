@@ -10,7 +10,7 @@ def transaction_history_page():
     st.write(default_db, default_collection)
     data = get_collection_data_wrapper(db_name=default_db, collection_name=default_collection)
     if data is not None and not data.empty:
-        st.subheader(body="Transaction History")
+        st.subheader(body="交易紀錄")
         data = data.drop(columns=["_id", "_created_at", "_updated_at"], errors="ignore")
         data = data.rename(columns={col: col.replace("_", " ").strip().title() for col in data.columns})
         data = data.sort_values(by="Date", ascending=False)
@@ -22,7 +22,7 @@ def transaction_history_page():
             hide_index=True,
         )
     else:
-        st.warning(body="No transaction history available.")
+        st.warning(body="沒有交易紀錄", icon="⚠️")
 
 def main():
     init_auth_state()
