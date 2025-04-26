@@ -18,7 +18,7 @@ def _verify_password(stored_password: str, provided_password: str) -> bool:
     import hashlib
     return stored_password == hashlib.sha256(provided_password.encode()).hexdigest()
 
-def bcrypt_hash_password(password: str) -> bytes:
+def hash_password(password: str) -> bytes:
     """
     Hash a password using bcrypt.
     """
@@ -26,7 +26,7 @@ def bcrypt_hash_password(password: str) -> bytes:
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed
 
-def bcrypt_verify_password(stored_password: bytes, provided_password: str) -> bool:
+def verify_password(stored_password: bytes, provided_password: str) -> bool:
     """
     Verify a stored password against a provided password using bcrypt.
     """
@@ -50,7 +50,7 @@ def store_password(password: str) -> None:
     Deprecated: Storing passwords on MongoDB is preferred.
     """
     import toml
-    hashed_password = bcrypt_hash_password(password)
+    hashed_password = hash_password(password)
     config = _read_toml(".streamlit/secrets.toml")
     
     if "app" not in config:
@@ -79,7 +79,7 @@ def store_secondary_password(password: str) -> None:
     Deprecated: Storing passwords on MongoDB is preferred.
     """
     import toml
-    hashed_password = bcrypt_hash_password(password)
+    hashed_password = hash_password(password)
     config = _read_toml(".streamlit/secrets.toml")
     
     if "app" not in config:
@@ -120,8 +120,8 @@ def create_admin_user(db_name: str, username: str, password: str, secondary_pass
     # Create admin user
     user_doc = {
         "username": username,
-        "password": bcrypt_hash_password(password),
-        "secondary_password": bcrypt_hash_password(secondary_password),
+        "password": hash_password(password),
+        "secondary_password": hash_password(secondary_password),
         "role": "admin",
         "created_at": _get_current_datetime(),
         "updated_at": _get_current_datetime(),
@@ -160,7 +160,7 @@ def authenticate_user(db_name: str, username: str, password: str) -> bool:
             # Check if password is stored as bytes (bcrypt) or string (old SHA-256)
             stored_password = user["password"]
             
-            if bcrypt_verify_password(stored_password, password):
+            if verify_password(stored_password, password):
                 print("User authenticated successfully via MongoDB (bcrypt).")
                 return True
         
@@ -182,7 +182,7 @@ def check_secondary_password(db_name: str, username: str, secondary_password: st
         
         if user and user.get("secondary_password"):
             stored_secondary_password = user["secondary_password"]
-            if bcrypt_verify_password(stored_secondary_password, secondary_password):
+            if verify_password(stored_secondary_password, secondary_password):
                 print("Secondary password verified successfully.")
                 return True
     except Exception as e:

@@ -1,6 +1,8 @@
 import bcrypt
 from datetime import datetime
 import streamlit as st
+from components.navigation import nav_bar
+from functions.auth_func import hash_password
 from functions.ui.auth_ui import get_user_collection_ui
 from functions.ui.auth_page import init_auth_state, login_page, auth_header
 
@@ -10,16 +12,6 @@ def init_user_management_state():
         st.session_state.selected_user = None
     if "user_action" not in st.session_state:
         st.session_state.user_action = ""
-
-def hash_password(password):
-    """Hash password using bcrypt"""
-    salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-    return hashed
-
-def verify_password(stored_password, provided_password):
-    """Verify password using bcrypt"""
-    return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password)
 
 def register_user_page():
     """User registration form"""
@@ -248,24 +240,21 @@ def user_actions():
             st.warning("Please select an action from the dropdown.")
 
 def main():
-    # Initialize authentication state
     init_auth_state()
-    
-    # Initialize user management specific state
     init_user_management_state()
+    nav_bar()
     
-    header = auth_header()
-    
-    header[1].title("User Management")
-    content = st.container()
+    header_placeholder = st.empty()
+    content_placeholder = st.empty()
     
     if not st.session_state.is_logged_in:
-        with content:
+        with content_placeholder:
             login_page()
     else:
-        content.empty()
-        
-        with content:
+        content_placeholder.empty()
+        with header_placeholder:
+            auth_header(page_title="User Management")
+        with content_placeholder:
             user_actions()
 
 if __name__ == "__main__":

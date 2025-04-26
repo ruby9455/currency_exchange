@@ -1,6 +1,7 @@
 import streamlit as st
+from components.navigation import nav_bar
 from functions.ui.crud_ui import get_create_table_page, get_insert_data_page, get_fetch_data_page, get_update_data_page, get_delete_data_page
-from functions.ui.auth_page import init_auth_state, login_page, logout_page, auth_header, auth_sidebar
+from functions.ui.auth_page import init_auth_state, login_page, auth_header
 
 def db_actions():
     left_col, right_col = st.columns([2, 8])
@@ -30,16 +31,18 @@ def db_actions():
 
 def main():
     init_auth_state()
-    header = auth_header()
+    nav_bar()
+    header_placeholder = st.empty()
+    content_placeholder = st.empty()
     
-    header[1].title("Database Operations")
-    content = st.container()
-    if not st.session_state.logged_in:
-        with content:
+    if not st.session_state.is_logged_in:
+        with content_placeholder:
             login_page()
     else:
-        content.empty()
-        with content:
+        content_placeholder.empty()
+        with header_placeholder:
+            auth_header(page_title="Database Operations")
+        with content_placeholder:
             db_actions()
 
 if __name__ == "__main__":
