@@ -2,7 +2,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from typing import Literal
     
-def _get_mongo_connection_string() -> str:
+def _get_mongo_connection_string_file() -> str:
     """
     Get the MongoDB connection string from the TOML file.
     """
@@ -42,7 +42,7 @@ def get_mongo_client(approach: Literal['file', 'st']='st') -> MongoClient | None
     """
     Create a MongoDB client using the connection string from environment variables.
     """
-    connection_str = _get_mongo_connection_string() if approach == 'file' else _get_mongo_connection_string_st()
+    connection_str = _get_mongo_connection_string_file() if approach == 'file' else _get_mongo_connection_string_st()
     
     # Create a MongoDB client
     client = MongoClient(connection_str, server_api=ServerApi('1'))
