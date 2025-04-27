@@ -1,11 +1,12 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from functions.utils import _read_toml
+from typing import Literal
     
 def _get_mongo_connection_string() -> str:
     """
     Get the MongoDB connection string from the TOML file.
     """
+    from functions.utils import _read_toml
     # Read the TOML file
     config = _read_toml(".streamlit/secrets.toml")
     
@@ -24,11 +25,24 @@ def _get_mongo_connection_string() -> str:
     
     return connection_string
 
-def get_mongo_client() -> MongoClient | None:
+def _get_mongo_connection_string_st() -> str:
+    import streamlit as st
+    username = st.secrets["mongo"]["username"]
+    password = st.secrets["mongo"]["password"]
+    host = st.secrets["mongo"]["host"]
+    protocol = st.secrets["mongo"]["protocol"]
+    options = st.secrets["mongo"]["options"]
+    if protocol.endswith("://"):
+        connection_string = f"{protocol}{username}:{password}@{host}/{options}"
+    else:
+        connection_string = f"{protocol}://{username}:{password}@{host}/{options}"
+    return connection_string
+
+def get_mongo_client(approach: Literal['file', 'st']='st') -> MongoClient | None:
     """
     Create a MongoDB client using the connection string from environment variables.
     """
-    connection_str = _get_mongo_connection_string()
+    connection_str = _get_mongo_connection_string() if approach == 'file' else _get_mongo_connection_string_st()
     
     # Create a MongoDB client
     client = MongoClient(connection_str, server_api=ServerApi('1'))

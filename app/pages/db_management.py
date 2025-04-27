@@ -5,18 +5,16 @@ from functions.ui.auth_page import init_auth_state, login_page, auth_header
 
 def db_actions():
     left_col, right_col = st.columns([2, 8])
-    default_action_index = 0
+    default_action_index = 2
     with left_col:  
         st.selectbox(
             label="Select an action", 
-            options=["", "Create Table on Database", "Insert Data", "Fetch Data", "Update Data", "Delete Data"], 
+            options=["Create Table on Database", "Insert Data", "Fetch Data", "Update Data", "Delete Data"], 
             index=default_action_index,
             key="db_action"
         )
     with right_col:
-        if st.session_state.db_action == "":
-            pass
-        elif st.session_state.db_action == "Create Table on Database":
+        if st.session_state.db_action == "Create Table on Database":
             get_create_table_page()
         elif st.session_state.db_action == "Insert Data":
             get_insert_data_page()
